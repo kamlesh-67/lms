@@ -8,9 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from '@/hooks/use-toast'
 import { Badge } from '@/components/ui/badge'
-import { handleSignOut } from '@/lib/actions'
+
 import { LogOut, Camera } from 'lucide-react'
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 
 export default function ProfilePage() {
   const { toast } = useToast()
@@ -144,7 +144,7 @@ export default function ProfilePage() {
 
             <div className="pt-6">
               <h3 className="text-lg font-medium mb-4">Account Actions</h3>
-              <Button variant="destructive" onClick={() => handleSignOut()}>
+              <Button variant="destructive" onClick={() => signOut({ callbackUrl: '/login' })}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Sign Out
               </Button>

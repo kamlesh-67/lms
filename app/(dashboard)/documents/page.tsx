@@ -61,7 +61,7 @@ export default function DocumentsPage() {
   const handleCloseManifest = async (manifestId: string) => {
     try {
       await dispatch(closeManifest(manifestId)).unwrap()
-      dispatch(fetchShipments()) // Refresh shipments to reflect locked status
+      dispatch(fetchShipments({})) // Refresh shipments to reflect locked status
 
       toast({
         title: "Manifest Closed",

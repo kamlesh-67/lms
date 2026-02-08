@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useEffect } from 'react'
 import { authenticate } from '@/lib/actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,6 +14,12 @@ export default function LoginPage() {
     authenticate,
     undefined
   )
+
+  useEffect(() => {
+    if (errorMessage?.success) {
+      window.location.href = '/'
+    }
+  }, [errorMessage])
 
   const demoUsers = [
     { name: 'Admin', email: 'admin@lmd.com', role: 'Full Access', color: 'bg-primary' },
@@ -79,7 +85,7 @@ export default function LoginPage() {
                 {errorMessage && (
                   <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{errorMessage}</AlertDescription>
+                    <AlertDescription>{errorMessage.message}</AlertDescription>
                   </Alert>
                 )}
 

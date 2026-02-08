@@ -69,7 +69,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const {
       awb, orderId, consigneeName, consigneePhone, address,
-      weight, serviceType, status, timeline
+      weight, serviceType, status, timeline, origin, destination
     } = body;
 
     const shipment = await prisma.shipment.create({
@@ -79,6 +79,8 @@ export async function POST(request: Request) {
         consigneeName,
         consigneePhone,
         address,
+        origin: origin || 'Dubai Hub',
+        destination: destination || address.split(',').pop()?.trim() || 'Dubai',
         weight: weight ? parseFloat(weight) : null,
         serviceType,
         status: status || 'Created',

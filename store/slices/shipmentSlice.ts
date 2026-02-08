@@ -11,7 +11,7 @@ export interface Shipment {
   destination?: string;
   weight: number;
   serviceType: string;
-  status: 'Created' | 'Pickup Assigned' | 'Picked' | 'In Transit' | 'Delivered' | 'Failed' | 'Cancelled' | 'Delayed' | 'RTO';
+  status: 'Created' | 'Pickup Assigned' | 'Picked' | 'In Transit' | 'Delivered' | 'Failed' | 'Cancelled' | 'Delayed' | 'RTO' | 'Returned';
   cancellationReason?: string;
   isDelayed?: boolean;
   isRTO?: boolean;

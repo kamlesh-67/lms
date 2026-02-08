@@ -31,35 +31,39 @@ interface Route {
 }
 
 const routes: Route[] = [
-  { name: 'Dashboard', path: '/', icon: BarChart3, shortcut: 'D' },
-  { name: 'Shipments', path: '/shipments', icon: Package, shortcut: 'S' },
-  { name: 'Pickups', path: '/pickups', icon: Truck, shortcut: 'P' },
-  { name: 'Tracking', path: '/tracking', icon: MapPin, shortcut: 'T' },
-  { name: 'Returns', path: '/returns', icon: RotateCcw, shortcut: 'R' },
-  { name: 'Documents', path: '/documents', icon: FileText, roles: ['Admin', 'Operations'], shortcut: 'O' },
+  { name: 'Dashboard', path: '/', icon: BarChart3, shortcut: 'D', roles: ['Admin', 'Operations Manager', 'Supervisor', 'Warehouse Staff', 'Customer Service'] },
+  { name: 'Shipments', path: '/shipments', icon: Package, roles: ['Admin', 'Operations Manager', 'Supervisor', 'Warehouse Staff', 'Customer Service'], shortcut: 'S' },
+  { name: 'Pickups', path: '/pickups', icon: Truck, roles: ['Admin', 'Operations Manager', 'Supervisor', 'Warehouse Staff', 'Customer Service'], shortcut: 'P' },
+  { name: 'Tracking', path: '/tracking', icon: MapPin, roles: ['Admin', 'Operations Manager', 'Supervisor', 'Warehouse Staff', 'Customer Service', 'Driver', 'Rider'], shortcut: 'T' },
+  { name: 'Returns', path: '/returns', icon: RotateCcw, roles: ['Admin', 'Operations Manager', 'Supervisor', 'Warehouse Staff', 'Customer Service'], shortcut: 'R' },
+  { name: 'Documents', path: '/documents', icon: FileText, roles: ['Admin', 'Warehouse Staff', 'Customer Service'], shortcut: 'O' },
   { name: 'Settings', path: '/settings', icon: Settings, shortcut: ',' },
 ]
 
 const adminRoutes: Route[] = [
-  { name: 'Audit Logs', path: '/admin/audit', icon: ShieldAlert, shortcut: 'A' },
-  { name: 'API History', path: '/admin/api-history', icon: Activity, shortcut: 'H' },
+  { name: 'Audit Logs', path: '/admin/audit', icon: ShieldAlert, shortcut: 'A', roles: ['Admin', 'Customer Service'] },
+  { name: 'API History', path: '/admin/api-history', icon: Activity, shortcut: 'H', roles: ['Admin', 'Customer Service'] },
 ]
 
-export function AppSidebar() {
+export function AppSidebar({ isMobile = false }: { isMobile?: boolean }) {
   const pathname = usePathname()
   const { data: session, status } = useSession()
   const userRole = session?.user?.role
   const isLoading = status === 'loading'
-  const [isCollapsed, setIsCollapsed] = useState(true)
+  const [isCollapsed, setIsCollapsed] = useState(!isMobile) // Default collapsed on desktop, expanded on mobile
   const [isHovered, setIsHovered] = useState(false)
 
-  // Load collapsed state from localStorage
+  // Load collapsed state from localStorage only if not mobile
   useEffect(() => {
+    if (isMobile) {
+      setIsCollapsed(false)
+      return
+    }
     const saved = localStorage.getItem('sidebar-collapsed')
     if (saved !== null) {
       setIsCollapsed(saved === 'true')
     }
-  }, [])
+  }, [isMobile])
 
   // Save collapsed state to localStorage
   const toggleCollapsed = () => {
@@ -72,7 +76,9 @@ export function AppSidebar() {
     !route.roles || (userRole && route.roles.includes(userRole))
   )
 
-  const filteredAdminRoutes = userRole === 'Admin' ? adminRoutes : []
+  const filteredAdminRoutes = adminRoutes.filter(route =>
+    !route.roles || (userRole && route.roles.includes(userRole))
+  )
 
   const showExpanded = !isCollapsed || isHovered
 
@@ -90,81 +96,51 @@ export function AppSidebar() {
         "flex items-center shadow-sm transition-all duration-300 p-4",
         showExpanded ? "justify-end" : "justify-center"
       )}>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleCollapsed}
-          className="h-8 w-8"
-        >
-          {showExpanded ? (
-            <ChevronLeft className="h-4 w-4" />
-          ) : (
-            <ChevronRight className="h-4 w-4" />
-          )}
-        </Button>
+        {!isMobile && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleCollapsed}
+            className="h-8 w-8"
+          >
+            {showExpanded ? (
+              <ChevronLeft className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </Button>
+        )}
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 p-3 overflow-y-auto">
-        {filteredRoutes.map((route) => (
-          <Link key={route.path} href={route.path}>
-            <Button
-              variant={pathname === route.path ? 'default' : 'ghost'}
-              className={cn(
-                "w-full gap-3 transition-all duration-200",
-                showExpanded ? "justify-start px-3" : "justify-center px-0",
-                pathname === route.path && "shadow-sm"
-              )}
-              size={showExpanded ? "default" : "icon"}
-            >
-              <div className={cn(
-                "flex items-center justify-center rounded-lg transition-all",
-                pathname === route.path
-                  ? "bg-[#ff9400]/10 text-[#ff9400] p-1.5"
-                  : "text-[#061359] dark:text-muted-foreground p-1.5 hover:text-[#ff9400]"
-              )}>
-                <route.icon className="h-5 w-5" />
+        {isLoading ? (
+          <div className="space-y-2 px-2">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <Skeleton className="h-8 w-8 rounded-lg" />
+                {showExpanded && <Skeleton className="h-4 w-24" />}
               </div>
-              {showExpanded && (
-                <span className="flex-1 text-left font-medium">{route.name}</span>
-              )}
-              {showExpanded && route.shortcut && (
-                <kbd className="hidden lg:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                  {route.shortcut}
-                </kbd>
-              )}
-            </Button>
-          </Link>
-        ))}
-
-        {filteredAdminRoutes.length > 0 && (
+            ))}
+          </div>
+        ) : (
           <>
-            {showExpanded && (
-              <div className="pt-4 pb-2">
-                <p className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Admin
-                </p>
-              </div>
-            )}
-            {!showExpanded && (
-              <div className="h-px bg-border my-2" />
-            )}
-            {filteredAdminRoutes.map((route) => (
+            {filteredRoutes.map((route) => (
               <Link key={route.path} href={route.path}>
                 <Button
-                  variant={pathname === route.path ? 'default' : 'ghost'}
+                  variant={pathname === route.path || (route.path !== '/' && pathname.startsWith(route.path)) ? 'default' : 'ghost'}
                   className={cn(
                     "w-full gap-3 transition-all duration-200",
                     showExpanded ? "justify-start px-3" : "justify-center px-0",
-                    pathname === route.path && "shadow-sm"
+                    (pathname === route.path || (route.path !== '/' && pathname.startsWith(route.path))) && "shadow-sm"
                   )}
                   size={showExpanded ? "default" : "icon"}
                 >
                   <div className={cn(
                     "flex items-center justify-center rounded-lg transition-all",
-                    pathname === route.path
+                    (pathname === route.path || (route.path !== '/' && pathname.startsWith(route.path)))
                       ? "bg-[#ff9400]/10 text-[#ff9400] p-1.5"
-                      : "text-[#061359] p-1.5 hover:text-[#ff9400]"
+                      : "text-[#061359] dark:text-muted-foreground p-1.5 hover:text-[#ff9400]"
                   )}>
                     <route.icon className="h-5 w-5" />
                   </div>
@@ -179,6 +155,51 @@ export function AppSidebar() {
                 </Button>
               </Link>
             ))}
+
+            {filteredAdminRoutes.length > 0 && (
+              <>
+                {showExpanded && (
+                  <div className="pt-4 pb-2">
+                    <p className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      Admin
+                    </p>
+                  </div>
+                )}
+                {!showExpanded && (
+                  <div className="h-px bg-border my-2" />
+                )}
+                {filteredAdminRoutes.map((route) => (
+                  <Link key={route.path} href={route.path}>
+                    <Button
+                      variant={pathname === route.path ? 'default' : 'ghost'}
+                      className={cn(
+                        "w-full gap-3 transition-all duration-200",
+                        showExpanded ? "justify-start px-3" : "justify-center px-0",
+                        pathname === route.path && "shadow-sm"
+                      )}
+                      size={showExpanded ? "default" : "icon"}
+                    >
+                      <div className={cn(
+                        "flex items-center justify-center rounded-lg transition-all",
+                        pathname === route.path
+                          ? "bg-[#ff9400]/10 text-[#ff9400] p-1.5"
+                          : "text-[#061359] p-1.5 hover:text-[#ff9400]"
+                      )}>
+                        <route.icon className="h-5 w-5" />
+                      </div>
+                      {showExpanded && (
+                        <span className="flex-1 text-left font-medium">{route.name}</span>
+                      )}
+                      {showExpanded && route.shortcut && (
+                        <kbd className="hidden lg:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                          {route.shortcut}
+                        </kbd>
+                      )}
+                    </Button>
+                  </Link>
+                ))}
+              </>
+            )}
           </>
         )}
       </nav>

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { MapPin, Navigation, User } from "lucide-react"
 import dynamic from "next/dynamic"
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 // Dynamically import LiveMap component to avoid SSR issues with Leaflet
 const LiveMap = dynamic(() => import('@/components/modules/tracking/LiveMap').then(mod => ({ default: mod.LiveMap })), {
@@ -22,7 +22,12 @@ export default function TrackingPage() {
     const dispatch = useAppDispatch()
     const { riders, selectedRiderId } = useAppSelector((state) => state.tracking)
 
+    const [isMapExpanded, setIsMapExpanded] = useState(false)
     const selectedRider = riders.find(r => r.id === selectedRiderId) || riders[0]
+
+    // Mock path data for demonstration
+    const pathStart: [number, number] = [25.19, 55.26] // Start point
+    const pathEnd: [number, number] = [25.22, 55.29]   // End point
 
     // Simulate rider movement every 3 seconds for the selected rider
     useEffect(() => {
@@ -56,11 +61,11 @@ export default function TrackingPage() {
                 </div>
                 <h2 className="text-3xl font-bold tracking-tight">Real-Time Tracking</h2>
             </div>
-            <ExceptionDashboard />
+            {!isMapExpanded && <ExceptionDashboard />}
 
             <div className="flex-1 flex flex-col md:flex-row gap-4 min-h-0">
                 {/* Sidebar List */}
-                <div className="w-full md:w-1/3 lg:w-1/4 flex flex-col gap-4">
+                <div className={`flex flex-col gap-4 transition-all duration-300 ${isMapExpanded ? 'w-[250px]' : 'w-full md:w-1/3 lg:w-1/4'}`}>
                     <Card className="flex-1 flex flex-col">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
@@ -116,6 +121,10 @@ export default function TrackingPage() {
                         center={mapCenter}
                         zoom={13}
                         showRoutes={true}
+                        onToggleExpand={() => setIsMapExpanded(!isMapExpanded)}
+                        isExpanded={isMapExpanded}
+                        pathStart={pathStart}
+                        pathEnd={pathEnd}
                     />
                 </div>
             </div>

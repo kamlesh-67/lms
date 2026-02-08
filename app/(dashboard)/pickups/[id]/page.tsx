@@ -9,7 +9,7 @@ import { ArrowLeft, MapPin, Calendar, Phone, User, Package, AlertOctagon, FileDo
 import { format } from "date-fns"
 import { AssignRiderDialog } from "@/components/modules/pickup/AssignRiderDialog"
 import { PickupStatusUpdate } from "@/components/modules/pickup/PickupStatusUpdate"
-import { downloadLabel } from "@/lib/download-util"
+import { downloadPickupLabel } from "@/lib/download-util"
 
 export default function PickupDetailsPage() {
     const params = useParams()
@@ -44,19 +44,21 @@ export default function PickupDetailsPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" onClick={() => router.back()}>
-                    <ArrowLeft className="h-4 w-4" />
-                </Button>
-                <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-[#ff9400]/10 mr-2">
-                    <Truck className="h-6 w-6 text-[#ff9400]" />
+            <div className="flex flex-col md:flex-row md:items-center gap-4">
+                <div className="flex items-center gap-4">
+                    <Button variant="ghost" size="icon" onClick={() => router.back()}>
+                        <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                    <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-[#ff9400]/10 mr-2">
+                        <Truck className="h-6 w-6 text-[#ff9400]" />
+                    </div>
+                    <div>
+                        <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Pickup Details</h2>
+                        <p className="text-muted-foreground">Request ID: {pickup.requestId}</p>
+                    </div>
                 </div>
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Pickup Details</h2>
-                    <p className="text-muted-foreground">Request ID: {pickup.requestId}</p>
-                </div>
-                <div className="ml-auto flex items-center gap-2">
-                    <Button variant="outline" onClick={() => downloadLabel(pickup.id, 'pickup')}>
+                <div className="flex flex-wrap items-center gap-2 mt-2 md:mt-0 md:ml-auto">
+                    <Button variant="outline" onClick={() => downloadPickupLabel(pickup)}>
                         <FileDown className="mr-2 h-4 w-4" /> Label
                     </Button>
                     <Badge className="text-base px-4 py-1" variant={getStatusColor(pickup.status)}>
@@ -89,7 +91,7 @@ export default function PickupDetailsPage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <p className="text-sm font-medium text-muted-foreground">Service Type</p>
                                 <p className="font-medium">{pickup.serviceType}</p>
@@ -104,6 +106,10 @@ export default function PickupDetailsPage() {
                                     <Calendar className="h-4 w-4 text-muted-foreground" />
                                     <p className="font-medium">{format(new Date(pickup.scheduledDate), 'PPP')}</p>
                                 </div>
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground">Estimated Weight</p>
+                                <p className="font-medium">{pickup.estimatedWeight} kg</p>
                             </div>
                         </div>
                         <div>

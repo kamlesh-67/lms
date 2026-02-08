@@ -29,14 +29,16 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { 
-       requestId, scheduledDate, address, serviceType, status,
-       location, contactName, contactPhone, awbNumber
+    const {
+      requestId, scheduledDate, address, serviceType, status,
+      location, contactName, contactPhone, awbNumber, customerName, customerPhone
     } = body;
 
     const pickup = await prisma.pickup.create({
       data: {
         requestId,
+        customerName: customerName || contactName,
+        customerPhone: customerPhone || contactPhone,
         scheduledDate: new Date(scheduledDate),
         address,
         serviceType,

@@ -14,6 +14,10 @@ export interface Pickup {
   contactName: string;
   contactPhone: string;
   awbNumber: string;
+  itemCount?: number;
+  estimatedWeight?: number;
+  customerName?: string;
+  customerPhone?: string;
 }
 
 interface PickupState {

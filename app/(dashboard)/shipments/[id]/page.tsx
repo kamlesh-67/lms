@@ -35,18 +35,20 @@ export default function ShipmentDetailsPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" onClick={() => router.back()}>
-                    <ArrowLeft className="h-4 w-4" />
-                </Button>
-                <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-primary/10 mr-2">
-                    <Package className="h-6 w-6 text-primary" />
+            <div className="flex flex-col md:flex-row md:items-center gap-4">
+                <div className="flex items-center gap-4">
+                    <Button variant="ghost" size="icon" onClick={() => router.back()}>
+                        <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                    <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-primary/10 mr-2">
+                        <Package className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                        <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Shipment Details</h2>
+                        <p className="text-muted-foreground">AWB: {shipment.awb}</p>
+                    </div>
                 </div>
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Shipment Details</h2>
-                    <p className="text-muted-foreground">AWB: {shipment.awb}</p>
-                </div>
-                <div className="ml-auto flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 mt-2 md:mt-0 md:ml-auto">
                     <Button variant="outline" onClick={() => downloadShipmentLabel(shipment)}>
                         <FileDown className="mr-2 h-4 w-4" /> Label
                     </Button>
@@ -85,7 +87,7 @@ export default function ShipmentDetailsPage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <p className="text-sm font-medium text-muted-foreground">Order ID</p>
                                 <p className="font-medium">{shipment.orderId}</p>

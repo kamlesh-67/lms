@@ -1,8 +1,10 @@
 'use client'
 
-import { Bell, User, LogOut, Settings, UserCircle, AlertCircle, Keyboard, Package } from 'lucide-react'
+import { Bell, User, LogOut, Settings, UserCircle, AlertCircle, Keyboard, Package, Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CommandMenu } from '@/components/layout/CommandMenu'
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { AppSidebar } from '@/components/layout/AppSidebar'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -16,7 +18,7 @@ import { useRouter } from 'next/navigation'
 import { useToast } from '@/hooks/use-toast'
 import { useState } from 'react'
 
-import { handleSignOut } from '@/lib/actions'
+import { signOut } from 'next-auth/react'
 import { ThemeCustomizer } from "@/components/theme-customizer"
 import { ModeToggle } from "@/components/theme-toggle"
 import { KeyboardShortcuts } from "@/components/keyboard-shortcuts"
@@ -35,6 +37,20 @@ export function Header() {
   return (
     <>
       <header className="sticky top-0 z-30 flex h-16 items-center gap-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6 shadow-sm">
+        {/* Mobile Sidebar Trigger */}
+        <div className="md:hidden">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="mr-2">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="p-0 w-[240px]">
+              <AppSidebar isMobile={true} />
+            </SheetContent>
+          </Sheet>
+        </div>
+
         {/* Logo and Branding */}
         <div className="flex items-center gap-3">
           <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-primary/10">
@@ -133,7 +149,7 @@ export function Header() {
                 </kbd>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => handleSignOut()} className="cursor-pointer text-destructive focus:text-destructive">
+              <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/login' })} className="cursor-pointer text-destructive focus:text-destructive">
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log Out</span>
               </DropdownMenuItem>

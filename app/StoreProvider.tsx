@@ -5,10 +5,14 @@ import { Provider } from 'react-redux'
 import { makeStore, AppStore } from '../store/store'
 import { SessionProvider } from 'next-auth/react'
 
+import { Session } from 'next-auth'
+
 export default function StoreProvider({
   children,
+  session
 }: {
   children: React.ReactNode
+  session?: Session | null
 }) {
   const storeRef = useRef<AppStore | null>(null)
   if (!storeRef.current) {
@@ -16,7 +20,7 @@ export default function StoreProvider({
   }
 
   return (
-    <SessionProvider>
+    <SessionProvider session={session}>
       <Provider store={storeRef.current}>{children}</Provider>
     </SessionProvider>
   )

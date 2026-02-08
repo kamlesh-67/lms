@@ -7,17 +7,18 @@ export const authConfig = {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
-      const isOnDashboard = nextUrl.pathname.startsWith('/dashboard') || 
-                          nextUrl.pathname === '/' ||
-                          nextUrl.pathname.startsWith('/admin') ||
-                          nextUrl.pathname.startsWith('/shipments') ||
-                          nextUrl.pathname.startsWith('/pickups') ||
-                          nextUrl.pathname.startsWith('/tracking') ||
-                          nextUrl.pathname.startsWith('/documents') ||
-                          nextUrl.pathname.startsWith('/profile') ||
-                          nextUrl.pathname.startsWith('/account') ||
-                          nextUrl.pathname.startsWith('/notifications') ||
-                          nextUrl.pathname.startsWith('/settings');
+      const isOnDashboard = nextUrl.pathname.startsWith('/dashboard') ||
+        nextUrl.pathname === '/' ||
+        nextUrl.pathname.startsWith('/admin') ||
+        nextUrl.pathname.startsWith('/shipments') ||
+        nextUrl.pathname.startsWith('/pickups') ||
+        nextUrl.pathname.startsWith('/tracking') ||
+        nextUrl.pathname.startsWith('/documents') ||
+        nextUrl.pathname.startsWith('/profile') ||
+        nextUrl.pathname.startsWith('/returns') ||
+        nextUrl.pathname.startsWith('/account') ||
+        nextUrl.pathname.startsWith('/notifications') ||
+        nextUrl.pathname.startsWith('/settings');
 
       if (isOnDashboard) {
         if (isLoggedIn) return true;

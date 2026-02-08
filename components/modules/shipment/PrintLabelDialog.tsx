@@ -48,7 +48,7 @@ export function PrintLabelDialog({
     onOpenChange,
     shipment,
 }: PrintLabelDialogProps) {
-    const [format, setFormat] = useState('4x6')
+    const [format, setFormat] = useState<'4x6' | 'a4' | 'a6'>('4x6')
     const [printer, setPrinter] = useState('default')
     const [isGenerating, setIsGenerating] = useState(false)
     const { toast } = useToast()
@@ -112,7 +112,7 @@ export function PrintLabelDialog({
                 <div className="space-y-4 py-4">
                     <div className="space-y-2">
                         <Label htmlFor="format">Label Format</Label>
-                        <Select value={format} onValueChange={setFormat}>
+                        <Select value={format} onValueChange={(v) => setFormat(v as any)}>
                             <SelectTrigger id="format">
                                 <SelectValue />
                             </SelectTrigger>

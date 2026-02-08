@@ -20,11 +20,15 @@ export const metadata: Metadata = {
   description: "Emirates Logistics Express - Last Mile Delivery Portal",
 };
 
-export default function RootLayout({
+import { auth } from "@/auth";
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -36,7 +40,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <StoreProvider>
+          <StoreProvider session={session}>
             {children}
             <Toaster />
           </StoreProvider>

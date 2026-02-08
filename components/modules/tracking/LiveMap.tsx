@@ -6,7 +6,8 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Truck, Package, MapPin } from 'lucide-react'
+import { Truck, Package, MapPin, Maximize2, Minimize2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 // Fix Leaflet default icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl
@@ -39,6 +40,10 @@ interface LiveMapProps {
     center?: [number, number]
     zoom?: number
     showRoutes?: boolean
+    onToggleExpand?: () => void
+    isExpanded?: boolean
+    pathStart?: [number, number]
+    pathEnd?: [number, number]
 }
 
 export function LiveMap({
@@ -46,7 +51,11 @@ export function LiveMap({
     shipments = [],
     center = [25.2048, 55.2708], // Dubai coordinates
     zoom = 11,
-    showRoutes = false
+    showRoutes = false,
+    onToggleExpand,
+    isExpanded = false,
+    pathStart,
+    pathEnd
 }: LiveMapProps) {
     const [mounted, setMounted] = useState(false)
 
@@ -90,6 +99,24 @@ export function LiveMap({
         iconAnchor: [12, 12],
     })
 
+    const startIcon = L.divIcon({
+        className: 'custom-div-icon',
+        html: `<div style="background-color: #22c55e; width: 24px; height: 24px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
+            <span style="color: white; font-weight: bold; font-size: 10px;">A</span>
+        </div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+    })
+
+    const endIcon = L.divIcon({
+        className: 'custom-div-icon',
+        html: `<div style="background-color: #ef4444; width: 24px; height: 24px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
+            <span style="color: white; font-weight: bold; font-size: 10px;">B</span>
+        </div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+    })
+
     // Sample route for demonstration
     const sampleRoute: [number, number][] = [
         [25.2048, 55.2708],
@@ -105,7 +132,7 @@ export function LiveMap({
                         <MapPin className="h-5 w-5 text-primary" />
                         Live Fleet Tracking
                     </CardTitle>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 items-center">
                         <Badge variant="outline" className="gap-1">
                             <Truck className="h-3 w-3" />
                             {riders.length} Riders
@@ -114,11 +141,16 @@ export function LiveMap({
                             <Package className="h-3 w-3" />
                             {shipments.length} Shipments
                         </Badge>
+                        {onToggleExpand && (
+                            <Button variant="ghost" size="icon" className="h-8 w-8 ml-2" onClick={onToggleExpand}>
+                                {isExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                            </Button>
+                        )}
                     </div>
                 </div>
             </CardHeader>
             <CardContent className="p-0">
-                <div className="h-[600px] relative">
+                <div className={`${isExpanded ? 'h-[calc(100vh-12rem)]' : 'h-[600px]'} relative transition-all duration-300`}>
                     <MapContainer
                         center={center}
                         zoom={zoom}
@@ -178,7 +210,31 @@ export function LiveMap({
                         ))}
 
                         {/* Render Routes */}
-                        {showRoutes && (
+                        {showRoutes && pathStart && pathEnd && (
+                            <>
+                                {/* Path Line */}
+                                <Polyline
+                                    positions={[pathStart, ...sampleRoute, pathEnd]}
+                                    color="#061359"
+                                    weight={4}
+                                    opacity={0.8}
+                                    dashArray="10, 10"
+                                />
+
+                                {/* Start Point */}
+                                <Marker position={pathStart} icon={startIcon}>
+                                    <Popup>Start Location</Popup>
+                                </Marker>
+
+                                {/* End Point */}
+                                <Marker position={pathEnd} icon={endIcon}>
+                                    <Popup>End Location</Popup>
+                                </Marker>
+                            </>
+                        )}
+
+                        {/* Legacy Routes if no specific start/end provided but showRoutes is true */}
+                        {showRoutes && (!pathStart || !pathEnd) && (
                             <>
                                 <Polyline
                                     positions={sampleRoute}
@@ -187,16 +243,6 @@ export function LiveMap({
                                     opacity={0.7}
                                     dashArray="10, 10"
                                 />
-                                {sampleRoute.map((pos, idx) => (
-                                    <Circle
-                                        key={idx}
-                                        center={pos}
-                                        radius={50}
-                                        fillColor="#ff9400"
-                                        fillOpacity={0.3}
-                                        stroke={false}
-                                    />
-                                ))}
                             </>
                         )}
                     </MapContainer>

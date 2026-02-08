@@ -4,18 +4,22 @@ import { signIn, signOut } from '@/auth';
 import { AuthError } from 'next-auth';
 
 export async function authenticate(
-  prevState: string | undefined,
+  prevState: { message?: string } | undefined,
   formData: FormData,
 ) {
   try {
-    await signIn('credentials', formData);
+    await signIn('credentials', {
+      ...Object.fromEntries(formData),
+      redirect: false,
+    });
+    return { success: true };
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {
         case 'CredentialsSignin':
-          return 'Invalid credentials.';
+          return { message: 'Invalid credentials.' };
         default:
-          return 'Something went wrong.';
+          return { message: 'Something went wrong.' };
       }
     }
     throw error;
@@ -23,5 +27,5 @@ export async function authenticate(
 }
 
 export async function handleSignOut() {
-    await signOut();
+  await signOut({ redirectTo: '/login' });
 }

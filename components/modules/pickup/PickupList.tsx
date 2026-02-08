@@ -21,13 +21,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { ArrowUpDown, ArrowUp, ArrowDown, Search, Filter, Calendar as CalendarIcon, MapPin } from "lucide-react"
+import { ArrowUpDown, ArrowUp, ArrowDown, Search, Filter, Calendar as CalendarIcon, MapPin, Printer } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Pickup, fetchPickups } from '@/store/slices/pickupSlice'
 import { format } from "date-fns"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
+import { Checkbox } from "@/components/ui/checkbox"
+import { generatePickupLabelsPDF } from "@/lib/pdf-generator"
+import { useToast } from "@/hooks/use-toast"
 
 type SortConfig = {
   key: keyof Pickup | 'contact';
@@ -37,6 +40,7 @@ type SortConfig = {
 export function PickupList() {
   const { items: pickups, loading } = useAppSelector((state) => state.pickups)
   const dispatch = useAppDispatch()
+  const { toast } = useToast()
 
   useEffect(() => {
     dispatch(fetchPickups())
@@ -47,6 +51,7 @@ export function PickupList() {
   const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined)
   const [sortConfig, setSortConfig] = useState<SortConfig>(null)
   const [displayCount, setDisplayCount] = useState(20)
+  const [selectedPickups, setSelectedPickups] = useState<string[]>([])
   const observerTarget = useRef<HTMLTableRowElement>(null)
 
   const filteredPickups = useMemo(() => {
@@ -129,67 +134,121 @@ export function PickupList() {
     }
   }
 
+  const toggleSelectAll = (checked: boolean) => {
+    if (checked) {
+      // Select only filtered visible pickups or all filtered? usually all filtered
+      setSelectedPickups(filteredPickups.map(p => p.id));
+    } else {
+      setSelectedPickups([]);
+    }
+  };
+
+  const toggleSelect = (id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedPickups(prev => [...prev, id]);
+    } else {
+      setSelectedPickups(prev => prev.filter(pid => pid !== id));
+    }
+  };
+
+  const handleBulkPrint = async () => {
+    const selectedData = pickups.filter(p => selectedPickups.includes(p.id));
+    if (selectedData.length === 0) return;
+
+    try {
+      await generatePickupLabelsPDF(selectedData);
+      toast({
+        title: "Labels Generated",
+        description: `Generated labels for ${selectedData.length} pickups.`,
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error",
+        description: "Failed to generate labels.",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="relative flex-1 max-w-sm w-full">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search ID, AWB, Name..."
-            className="pl-8"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1 w-full md:w-auto">
+          <div className="relative flex-1 max-w-sm w-full">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search ID, AWB, Name..."
+              className="pl-8"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[130px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="Requested">Requested</SelectItem>
+                <SelectItem value="Assigned">Assigned</SelectItem>
+                <SelectItem value="Picked">Picked</SelectItem>
+                <SelectItem value="Failed">Failed</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-[40px] px-0 md:w-[150px] md:justify-start md:px-3 text-left font-normal",
+                    !dateFilter && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="h-4 w-4 md:mr-2" />
+                  <span className="hidden md:inline">
+                    {dateFilter ? format(dateFilter, "PPP") : "Date"}
+                  </span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  mode="single"
+                  selected={dateFilter}
+                  onSelect={setDateFilter}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-          <Filter className="h-4 w-4 text-muted-foreground" />
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="Requested">Requested</SelectItem>
-              <SelectItem value="Assigned">Assigned</SelectItem>
-              <SelectItem value="Picked">Picked</SelectItem>
-              <SelectItem value="Failed">Failed</SelectItem>
-            </SelectContent>
-          </Select>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className={cn(
-                  "w-[180px] justify-start text-left font-normal",
-                  !dateFilter && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dateFilter ? format(dateFilter, "PPP") : <span>Filter Date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
-              <Calendar
-                mode="single"
-                selected={dateFilter}
-                onSelect={setDateFilter}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-          {dateFilter && (
-            <Button variant="ghost" size="icon" onClick={() => setDateFilter(undefined)}>
-              <span className="sr-only">Clear date</span>
-              <span aria-hidden="true">×</span>
+
+        {/* Bulk Actions */}
+        {selectedPickups.length > 0 && (
+          <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-1">
+            <span className="text-sm text-muted-foreground hidden md:inline">
+              {selectedPickups.length} selected
+            </span>
+            <Button variant="outline" size="sm" onClick={handleBulkPrint}>
+              <Printer className="mr-2 h-4 w-4" /> Print Labels
             </Button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
-      <div className="rounded-md bg-card">
+      <div className="rounded-md bg-card border border-border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[50px]">
+                <Checkbox
+                  checked={filteredPickups.length > 0 && selectedPickups.length === filteredPickups.length}
+                  onCheckedChange={(checked) => toggleSelectAll(!!checked)}
+                />
+              </TableHead>
               <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => requestSort('requestId')}>
                 <div className="flex items-center">ID {getSortIcon('requestId')}</div>
               </TableHead>
@@ -215,6 +274,7 @@ export function PickupList() {
             {loading && (
               [...Array(3)].map((_, i) => (
                 <TableRow key={`skeleton-${i}`}>
+                  <TableCell><Skeleton className="h-4 w-4" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-12" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-20" /></TableCell>
@@ -232,7 +292,7 @@ export function PickupList() {
             )}
             {!loading && visiblePickups.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center">
+                <TableCell colSpan={8} className="h-24 text-center">
                   No pickup requests found.
                 </TableCell>
               </TableRow>
@@ -240,6 +300,12 @@ export function PickupList() {
             {!loading && visiblePickups.length > 0 && (
               visiblePickups.map((pickup) => (
                 <TableRow key={pickup.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedPickups.includes(pickup.id)}
+                      onCheckedChange={(checked) => toggleSelect(pickup.id, !!checked)}
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">{pickup.requestId}</TableCell>
                   <TableCell className="font-mono text-xs">{pickup.awbNumber || '-'}</TableCell>
                   <TableCell>{format(new Date(pickup.scheduledDate), 'PP')}</TableCell>
