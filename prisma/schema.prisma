@@ -1,0 +1,451 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ============================================
+// USER MANAGEMENT & AUTHENTICATION
+// ============================================
+
+model User {
+  id            String         @id @default(uuid())
+  name          String
+  email         String         @unique
+  password      String
+  role          String         // "Admin", "Operations Manager", "Supervisor", "Warehouse Staff", "Driver", "Customer Service"
+  avatar        String?
+  phone         String?
+  address       String?
+  isActive      Boolean        @default(true)
+  lastLogin     DateTime?
+  preferences   String?        // JSON string for user preferences
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  auditLogs     AuditLog[]
+  notifications Notification[]
+  profile       Profile?
+}
+
+model Profile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  avatar      String?
+  phone       String?
+  address     String?
+  city        String?
+  state       String?
+  zipCode     String?
+  country     String?
+  preferences String?  // JSON string
+  updatedAt   DateTime @updatedAt
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  permissions String   // JSON string of permissions
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============================================
+// SHIPMENT MANAGEMENT
+// ============================================
+
+model Shipment {
+  id                 String          @id @default(uuid())
+  awb                String          @unique
+  orderId            String
+  consigneeName      String
+  consigneePhone     String
+  consigneeEmail     String?
+  address            String
+  city               String?
+  state              String?
+  zipCode            String?
+  origin             String
+  destination        String
+  weight             Float?
+  length             Float?
+  width              Float?
+  height             Float?
+  declaredValue      Float?
+  serviceType        String          // Standard, Express, Same Day
+  status             String          // Created, Pickup Assigned, Picked, In Transit, Out for Delivery, Delivered, Failed, Cancelled, Delayed, RTO
+  cancellationReason String?
+  isDelayed          Boolean         @default(false)
+  isRTO              Boolean         @default(false)
+  podUrl             String?
+  podSignature       String?
+  deliveryNotes      String?
+  manifestId         String?
+  manifest           Manifest?       @relation(fields: [manifestId], references: [id])
+  routeId            String?
+  route              Route?          @relation(fields: [routeId], references: [id])
+  vehicleId          String?
+  vehicle            Vehicle?        @relation(fields: [vehicleId], references: [id])
+  driverId           String?
+  isLocked           Boolean         @default(false)
+  estimatedDelivery  DateTime?
+  actualDelivery     DateTime?
+  timeline           TrackingEvent[]
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+}
+
+model TrackingEvent {
+  id          String   @id @default(uuid())
+  shipmentId  String
+  shipment    Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  status      String
+  location    String
+  latitude    Float?
+  longitude   Float?
+  timestamp   DateTime @default(now())
+  hub         String?
+  description String?
+  updatedBy   String?
+}
+
+// ============================================
+// PICKUP MANAGEMENT
+// ============================================
+
+model Pickup {
+  id            String   @id @default(uuid())
+  requestId     String   @unique
+  customerId    String?
+  customerName  String
+  customerPhone String
+  customerEmail String?
+  scheduledDate DateTime
+  address       String
+  city          String?
+  zipCode       String?
+  serviceType   String
+  status        String   // Requested, Assigned, Picked, Failed, Cancelled
+  driverId      String?
+  failureReason String?
+  remarks       String?
+  location      String
+  contactName   String
+  contactPhone  String
+  awbNumber     String?
+  itemCount     Int?
+  estimatedWeight Float?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ============================================
+// RETURNS MANAGEMENT
+// ============================================
+
+model Return {
+  id              String   @id @default(uuid())
+  returnId        String   @unique
+  awbNumber       String
+  reason          String
+  status          String   // Requested, Approved, Rejected, Pickup Scheduled, Picked, In Transit, Received, Refunded
+  requestDate     DateTime @default(now())
+  approvalStatus  String   // Pending, Approved, Rejected
+  approvedBy      String?
+  approvalDate    DateTime?
+  pickupScheduled DateTime?
+  refundAmount    Float?
+  refundStatus    String?  // Pending, Processed, Completed
+  customerName    String
+  customerPhone   String
+  customerEmail   String?
+  remarks         String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ============================================
+// MANIFEST & ROUTE MANAGEMENT
+// ============================================
+
+model Manifest {
+  id            String     @id @default(uuid())
+  manifestRef   String     @unique // e.g. MAN-123456
+  date          DateTime   @default(now())
+  status        String     // Open, Closed, In Transit, Completed
+  routeId       String?
+  route         Route?     @relation(fields: [routeId], references: [id])
+  driverId      String?
+  vehicleId     String?
+  vehicle       Vehicle?   @relation(fields: [vehicleId], references: [id])
+  generatedBy   String
+  closedAt      DateTime?
+  completedAt   DateTime?
+  shipments     Shipment[]
+  totalShipments Int       @default(0)
+  deliveredCount Int       @default(0)
+  failedCount    Int       @default(0)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model Route {
+  id            String     @id @default(uuid())
+  routeId       String     @unique
+  name          String
+  origin        String
+  destination   String
+  stops         String     // JSON array of stops
+  distance      Float?     // in kilometers
+  estimatedTime Int?       // in minutes
+  status        String     // Active, Inactive, Completed
+  driverId      String?
+  vehicleId     String?
+  vehicle       Vehicle?   @relation(fields: [vehicleId], references: [id])
+  manifests     Manifest[]
+  shipments     Shipment[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+// ============================================
+// FLEET MANAGEMENT
+// ============================================
+
+model Vehicle {
+  id                 String     @id @default(uuid())
+  registrationNumber String     @unique
+  type               String     // Van, Truck, Bike, Car
+  make               String?
+  model              String?
+  year               Int?
+  capacity           Float?     // in kg
+  status             String     // Active, Inactive, Maintenance, Out of Service
+  driverId           String?
+  currentLocation    String?
+  latitude           Float?
+  longitude          Float?
+  fuelType           String?    // Petrol, Diesel, Electric, CNG
+  lastMaintenance    DateTime?
+  nextMaintenance    DateTime?
+  mileage            Float?     // in km
+  manifests          Manifest[]
+  routes             Route[]
+  shipments          Shipment[]
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+}
+
+model Driver {
+  id            String   @id @default(uuid())
+  driverId      String   @unique
+  name          String
+  email         String?  @unique
+  phone         String
+  licenseNumber String?
+  status        String   // Active, Idle, On Route, Offline, On Leave
+  currentLat    Float?
+  currentLng    Float?
+  vehicleId     String?
+  rating        Float?   @default(5.0)
+  totalDeliveries Int    @default(0)
+  successfulDeliveries Int @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// Legacy Rider model (keeping for compatibility)
+model Rider {
+  id                String   @id @default(uuid())
+  name              String
+  status            String   // Idle, Moving, Offline
+  lat               Float
+  lng               Float
+  currentShipmentId String?
+  updatedAt         DateTime @updatedAt
+}
+
+// ============================================
+// WAREHOUSE & INVENTORY
+// ============================================
+
+model Warehouse {
+  id          String   @id @default(uuid())
+  warehouseId String   @unique
+  name        String
+  address     String
+  city        String
+  state       String
+  zipCode     String
+  latitude    Float?
+  longitude   Float?
+  capacity    Float?   // in cubic meters
+  type        String   // Main Hub, Regional Hub, Local Center
+  status      String   // Active, Inactive, Under Maintenance
+  managerId   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Inventory {
+  id          String   @id @default(uuid())
+  itemId      String   @unique
+  name        String
+  category    String
+  quantity    Int
+  unit        String
+  warehouseId String
+  location    String?  // Storage location within warehouse
+  minStock    Int?
+  maxStock    Int?
+  reorderPoint Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============================================
+// LOCATIONS & HUBS
+// ============================================
+
+model Location {
+  id        String   @id @default(uuid())
+  name      String
+  address   String
+  city      String
+  state     String
+  zipCode   String
+  latitude  Float
+  longitude Float
+  type      String   // Hub, Warehouse, Office, Pickup Point
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ============================================
+// NOTIFICATIONS & COMMUNICATIONS
+// ============================================
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // Info, Warning, Error, Success
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  link      String?
+  metadata  String?  // JSON string
+  createdAt DateTime @default(now())
+}
+
+// ============================================
+// DOCUMENTS
+// ============================================
+
+model Document {
+  id          String   @id @default(uuid())
+  documentId  String   @unique
+  name        String
+  type        String   // Invoice, POD, Shipping Label, Manifest, Report
+  category    String
+  fileUrl     String
+  fileSize    Int?
+  mimeType    String?
+  relatedTo   String?  // AWB number, Manifest ID, etc.
+  uploadedBy  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============================================
+// SETTINGS & CONFIGURATION
+// ============================================
+
+model Setting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  category  String   // General, Notifications, Security, Integrations, Billing, Printer
+  dataType  String   // String, Number, Boolean, JSON
+  updatedBy String?
+  updatedAt DateTime @updatedAt
+}
+
+// ============================================
+// AUDIT & LOGGING
+// ============================================
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  action     String   // Created, Updated, Deleted, Viewed, Exported
+  entityType String   // Shipment, Pickup, User, Manifest, etc.
+  entityId   String
+  details    String   // JSON string with before/after values
+  ipAddress  String?
+  userAgent  String?
+  timestamp  DateTime @default(now())
+}
+
+model ApiHistory {
+  id         String   @id @default(uuid())
+  endpoint   String
+  method     String   // GET, POST, PUT, DELETE
+  statusCode Int
+  durationMs Int
+  timestamp  DateTime @default(now())
+  userId     String?
+  ipAddress  String?
+  payload    String?  // JSON string
+  response   String?  // JSON string
+  errorMessage String?
+}
+
+// ============================================
+// CUSTOMER MANAGEMENT
+// ============================================
+
+model Customer {
+  id          String   @id @default(uuid())
+  customerId  String   @unique
+  name        String
+  email       String   @unique
+  phone       String
+  address     String?
+  city        String?
+  state       String?
+  zipCode     String?
+  company     String?
+  gstNumber   String?
+  accountType String   // Individual, Business
+  status      String   // Active, Inactive, Suspended
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============================================
+// BILLING & INVOICING
+// ============================================
+
+model Invoice {
+  id            String   @id @default(uuid())
+  invoiceNumber String   @unique
+  customerId    String
+  amount        Float
+  tax           Float?
+  discount      Float?
+  totalAmount   Float
+  status        String   // Draft, Sent, Paid, Overdue, Cancelled
+  dueDate       DateTime
+  paidDate      DateTime?
+  paymentMethod String?
+  items         String   // JSON array of line items
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
