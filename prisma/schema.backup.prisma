@@ -1,6 +1,5 @@
-
 datasource db {
-  provider = "mongodb"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -13,7 +12,7 @@ generator client {
 // ============================================
 
 model User {
-  id            String         @id @default(uuid()) @map("_id")
+  id            String         @id @default(uuid())
   name          String
   email         String         @unique
   password      String
@@ -32,7 +31,7 @@ model User {
 }
 
 model Profile {
-  id          String   @id @default(uuid()) @map("_id")
+  id          String   @id @default(uuid())
   userId      String   @unique
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   avatar      String?
@@ -47,7 +46,7 @@ model Profile {
 }
 
 model Role {
-  id          String   @id @default(uuid()) @map("_id")
+  id          String   @id @default(uuid())
   name        String   @unique
   description String?
   permissions String   // JSON string of permissions
@@ -60,7 +59,7 @@ model Role {
 // ============================================
 
 model Shipment {
-  id                 String          @id @default(uuid()) @map("_id")
+  id                 String          @id @default(uuid())
   awb                String          @unique
   orderId            String
   consigneeName      String
@@ -101,7 +100,7 @@ model Shipment {
 }
 
 model TrackingEvent {
-  id          String   @id @default(uuid()) @map("_id")
+  id          String   @id @default(uuid())
   shipmentId  String
   shipment    Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
   status      String
@@ -119,7 +118,7 @@ model TrackingEvent {
 // ============================================
 
 model Pickup {
-  id            String   @id @default(uuid()) @map("_id")
+  id            String   @id @default(uuid())
   requestId     String   @unique
   customerId    String?
   customerName  String
@@ -149,7 +148,7 @@ model Pickup {
 // ============================================
 
 model Return {
-  id              String   @id @default(uuid()) @map("_id")
+  id              String   @id @default(uuid())
   returnId        String   @unique
   awbNumber       String
   reason          String
@@ -174,7 +173,7 @@ model Return {
 // ============================================
 
 model Manifest {
-  id            String     @id @default(uuid()) @map("_id")
+  id            String     @id @default(uuid())
   manifestRef   String     @unique // e.g. MAN-123456
   date          DateTime   @default(now())
   status        String     // Open, Closed, In Transit, Completed
@@ -195,7 +194,7 @@ model Manifest {
 }
 
 model Route {
-  id            String     @id @default(uuid()) @map("_id")
+  id            String     @id @default(uuid())
   routeId       String     @unique
   name          String
   origin        String
@@ -218,7 +217,7 @@ model Route {
 // ============================================
 
 model Vehicle {
-  id                 String     @id @default(uuid()) @map("_id")
+  id                 String     @id @default(uuid())
   registrationNumber String     @unique
   type               String     // Van, Truck, Bike, Car
   make               String?
@@ -242,7 +241,7 @@ model Vehicle {
 }
 
 model Driver {
-  id            String   @id @default(uuid()) @map("_id")
+  id            String   @id @default(uuid())
   driverId      String   @unique
   name          String
   email         String?  @unique
@@ -261,7 +260,7 @@ model Driver {
 
 // Legacy Rider model (keeping for compatibility)
 model Rider {
-  id                String   @id @default(uuid()) @map("_id")
+  id                String   @id @default(uuid())
   name              String
   status            String   // Idle, Moving, Offline
   lat               Float
@@ -275,7 +274,7 @@ model Rider {
 // ============================================
 
 model Warehouse {
-  id          String   @id @default(uuid()) @map("_id")
+  id          String   @id @default(uuid())
   warehouseId String   @unique
   name        String
   address     String
@@ -293,7 +292,7 @@ model Warehouse {
 }
 
 model Inventory {
-  id          String   @id @default(uuid()) @map("_id")
+  id          String   @id @default(uuid())
   itemId      String   @unique
   name        String
   category    String
@@ -313,7 +312,7 @@ model Inventory {
 // ============================================
 
 model Location {
-  id        String   @id @default(uuid()) @map("_id")
+  id        String   @id @default(uuid())
   name      String
   address   String
   city      String
@@ -332,7 +331,7 @@ model Location {
 // ============================================
 
 model Notification {
-  id        String   @id @default(uuid()) @map("_id")
+  id        String   @id @default(uuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   type      String   // Info, Warning, Error, Success
@@ -349,7 +348,7 @@ model Notification {
 // ============================================
 
 model Document {
-  id          String   @id @default(uuid()) @map("_id")
+  id          String   @id @default(uuid())
   documentId  String   @unique
   name        String
   type        String   // Invoice, POD, Shipping Label, Manifest, Report
@@ -368,7 +367,7 @@ model Document {
 // ============================================
 
 model Setting {
-  id        String   @id @default(uuid()) @map("_id")
+  id        String   @id @default(uuid())
   key       String   @unique
   value     String
   category  String   // General, Notifications, Security, Integrations, Billing, Printer
@@ -382,7 +381,7 @@ model Setting {
 // ============================================
 
 model AuditLog {
-  id         String   @id @default(uuid()) @map("_id")
+  id         String   @id @default(uuid())
   userId     String
   user       User     @relation(fields: [userId], references: [id])
   action     String   // Created, Updated, Deleted, Viewed, Exported
@@ -395,7 +394,7 @@ model AuditLog {
 }
 
 model ApiHistory {
-  id         String   @id @default(uuid()) @map("_id")
+  id         String   @id @default(uuid())
   endpoint   String
   method     String   // GET, POST, PUT, DELETE
   statusCode Int
@@ -413,7 +412,7 @@ model ApiHistory {
 // ============================================
 
 model Customer {
-  id          String   @id @default(uuid()) @map("_id")
+  id          String   @id @default(uuid())
   customerId  String   @unique
   name        String
   email       String   @unique
@@ -435,7 +434,7 @@ model Customer {
 // ============================================
 
 model Invoice {
-  id            String   @id @default(uuid()) @map("_id")
+  id            String   @id @default(uuid())
   invoiceNumber String   @unique
   customerId    String
   amount        Float

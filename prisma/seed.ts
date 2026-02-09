@@ -111,7 +111,7 @@ async function main() {
     const cities = ['Dubai', 'Abu Dhabi', 'Sharjah', 'Ajman', 'Ras Al Khaimah']
     const streets = ['Sheikh Zayed Rd', 'Al Wasl Rd', 'Jumeirah St', 'Al Khail Rd', 'Emirates Rd']
 
-    for (let i = 1; i <= 50; i++) {
+    for (let i = 1; i <= 5; i++) {
         const shipment = await prisma.shipment.create({
             data: {
                 awb: `AWB-${String(i).padStart(8, '0')}`,
