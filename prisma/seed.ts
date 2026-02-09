@@ -111,7 +111,7 @@ async function main() {
     const cities = ['Dubai', 'Abu Dhabi', 'Sharjah', 'Ajman', 'Ras Al Khaimah']
     const streets = ['Sheikh Zayed Rd', 'Al Wasl Rd', 'Jumeirah St', 'Al Khail Rd', 'Emirates Rd']
 
-    for (let i = 1; i <= 5; i++) {
+    for (let i = 1; i <= 30; i++) {
         const shipment = await prisma.shipment.create({
             data: {
                 awb: `AWB-${String(i).padStart(8, '0')}`,
@@ -129,20 +129,16 @@ async function main() {
             },
         })
 
-        // Add 3-5 tracking events for each shipment
-        const eventCount = Math.floor(Math.random() * 3) + 3
-        for (let j = 0; j < eventCount; j++) {
-            await prisma.trackingEvent.create({
-                data: {
-                    shipmentId: shipment.id,
-                    status: statuses[Math.min(j, statuses.length - 1)],
-                    location: cities[Math.floor(Math.random() * cities.length)],
-                    hub: `Hub ${Math.floor(Math.random() * 3) + 1}`,
-                    timestamp: new Date(Date.now() - (eventCount - j) * 24 * 60 * 60 * 1000),
-                    description: `Shipment status updated to ${statuses[Math.min(j, statuses.length - 1)]}`,
-                },
-            })
-        }
+        // Simplified tracking event for performance
+        await prisma.trackingEvent.create({
+            data: {
+                shipmentId: shipment.id,
+                status: 'Created',
+                location: 'System',
+                timestamp: new Date(),
+                description: 'Shipment created'
+            }
+        })
     }
 
     console.log(`✅ Created 50 shipments with tracking events`)
@@ -154,7 +150,7 @@ async function main() {
 
     const pickupStatuses = ['Requested', 'Assigned', 'Picked', 'Failed', 'Cancelled']
 
-    for (let i = 1; i <= 20; i++) {
+    for (let i = 1; i <= 60; i++) {
         await prisma.pickup.create({
             data: {
                 requestId: `REQ-${String(i).padStart(6, '0')}`,
@@ -181,7 +177,7 @@ async function main() {
     // ============================================
     console.log('👨‍✈️ Seeding riders...')
 
-    for (let i = 1; i <= 10; i++) {
+    for (let i = 1; i <= 60; i++) {
         await prisma.rider.create({
             data: {
                 name: `Rider ${i}`,
@@ -201,7 +197,7 @@ async function main() {
 
     const users = await prisma.user.findMany()
 
-    for (let i = 1; i <= 15; i++) {
+    for (let i = 1; i <= 60; i++) {
         await prisma.manifest.create({
             data: {
                 manifestRef: `MAN-${String(i).padStart(6, '0')}`,
@@ -221,7 +217,7 @@ async function main() {
     const actions = ['Created', 'Updated', 'Deleted', 'Viewed']
     const entityTypes = ['Shipment', 'Pickup', 'Manifest', 'User']
 
-    for (let i = 1; i <= 20; i++) {
+    for (let i = 1; i <= 60; i++) {
         await prisma.auditLog.create({
             data: {
                 userId: users[Math.floor(Math.random() * users.length)].id,
@@ -244,7 +240,7 @@ async function main() {
     const methods = ['GET', 'POST', 'PUT', 'DELETE']
     const endpoints = ['/api/shipments', '/api/pickups', '/api/manifests', '/api/tracking']
 
-    for (let i = 1; i <= 15; i++) {
+    for (let i = 1; i <= 60; i++) {
         await prisma.apiHistory.create({
             data: {
                 endpoint: endpoints[Math.floor(Math.random() * endpoints.length)],

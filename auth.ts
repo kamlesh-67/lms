@@ -19,6 +19,7 @@ async function getUser(email: string) {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
+  secret: process.env.AUTH_SECRET,
   providers: [
     Credentials({
       async authorize(credentials) {
@@ -30,16 +31,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const { email, password } = parsedCredentials.data;
           const user = await getUser(email);
           if (!user) return null;
-          
+
           const passwordsMatch = await bcrypt.compare(password, user.password);
           if (passwordsMatch) {
-             // Return user object with role
-             return {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-             };
+            // Return user object with role
+            return {
+              id: user.id,
+              name: user.name,
+              email: user.email,
+              role: user.role,
+            };
           }
         }
 
