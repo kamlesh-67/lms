@@ -57,7 +57,7 @@ export function Header() {
             <Package className="h-6 w-6 text-[#ff9400]" />
           </div>
           <div className="hidden md:block">
-            <h1 className="text-lg font-bold text-primary tracking-tight">LMS Portal</h1>
+            <h1 className="text-lg font-bold text-primary tracking-tight">LMD Portal</h1>
             <p className="text-[10px] text-muted-foreground leading-none">Emirates Logistics Express</p>
           </div>
         </div>
