@@ -34,9 +34,12 @@ export async function POST(request: Request) {
       location, contactName, contactPhone, awbNumber, customerName, customerPhone
     } = body;
 
+    // Generate requestId if not provided
+    const generatedRequestId = requestId || `REQ-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+
     const pickup = await prisma.pickup.create({
       data: {
-        requestId,
+        requestId: generatedRequestId,
         customerName: customerName || contactName,
         customerPhone: customerPhone || contactPhone,
         scheduledDate: new Date(scheduledDate),

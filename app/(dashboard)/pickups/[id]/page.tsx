@@ -117,7 +117,7 @@ export default function PickupDetailsPage() {
                             <div className="flex items-center gap-2">
                                 <User className="h-4 w-4 text-muted-foreground" />
                                 <p className="font-medium">
-                                    {pickup.riderId ? `Rider ${pickup.riderId}` : 'Not Assigned'}
+                                    {pickup.driverId ? `Rider ${pickup.driverId}` : 'Not Assigned'}
                                 </p>
                             </div>
                         </div>

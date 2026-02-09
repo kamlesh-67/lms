@@ -7,7 +7,7 @@ export interface Pickup {
   address: string;
   serviceType: string;
   status: 'Requested' | 'Assigned' | 'Picked' | 'Failed';
-  riderId?: string;
+  driverId?: string; // Changed from riderId to match database schema
   failureReason?: string;
   remarks?: string;
   location: string; // For filtering

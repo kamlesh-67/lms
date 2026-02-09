@@ -72,9 +72,12 @@ export async function POST(request: Request) {
       weight, serviceType, status, timeline, origin, destination
     } = body;
 
+    // Generate AWB if not provided
+    const generatedAwb = awb || `AWB-${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+
     const shipment = await prisma.shipment.create({
       data: {
-        awb,
+        awb: generatedAwb,
         orderId,
         consigneeName,
         consigneePhone,

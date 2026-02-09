@@ -12,7 +12,7 @@ export async function PATCH(
   }
 
   const { id } = await params;
-  
+
   try {
     const body = await request.json();
     const { status, failureReason, remarks, riderId } = body;
@@ -24,7 +24,8 @@ export async function PATCH(
 
     if (failureReason !== undefined) updateData.failureReason = failureReason;
     if (remarks !== undefined) updateData.remarks = remarks;
-    if (riderId !== undefined) updateData.riderId = riderId;
+    // Map riderId from frontend to driverId in database
+    if (riderId !== undefined) updateData.driverId = riderId;
 
     const pickup = await prisma.pickup.update({
       where: { id },
